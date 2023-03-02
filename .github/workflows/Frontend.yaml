@@ -5,13 +5,13 @@ on:
     branches:
       - develop
     paths:
-      - 'frontend/*'
+      - 'frontend'
 
   push:
     branches:
       - develop
     paths:
-      - 'frontend/*'
+      - 'frontend'
 
 
 permissions:

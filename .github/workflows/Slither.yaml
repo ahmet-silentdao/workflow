@@ -1,0 +1,63 @@
+name: Slither Analysis
+
+on:
+  pull_request:
+    branches:
+      - develop
+    paths:
+      - 'contracts/*'
+  push:
+    branches:
+      - develop
+    paths:
+    - 'contracts/*'
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Node.js 16.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+
+      - name: Install Dependencies
+        run: yarn install
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Circom
+        run: |
+          git clone https://github.com/iden3/circom.git
+          cd circom
+          git checkout 3fa5592c41a59a8a79cb6a328606c64a4b451762
+          cd ..
+          cargo build --manifest-path circom/Cargo.toml --release
+          cargo install --path circom/circom
+          sudo npm install -g snarkjs@0.4.16
+
+      - name: Run Get Keys from S3-Bucket
+        run: yarn getKeys
+
+      - name: Build monorepo
+        run: yarn build
+
+      - name: Install Python3
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Slither
+        run: pip install slither-analyzer
+
+      - name: Run Slither
+        run: |
+          cd contracts
+          yarn compile
+          slither . --print human-summary --ignore-compile
